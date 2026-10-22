@@ -1,0 +1,63 @@
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: doctor-availability
+              uri: lb://appointment-service
+              predicates:
+                - Path=/api/v1/users/*/availability
+            - id: catalog-users
+              uri: lb://catalog-service
+              predicates:
+                - Path=/api/v1/users/**
+            - id: catalog-procedures
+              uri: lb://catalog-service
+              predicates:
+                - Path=/api/v1/procedures/**
+            - id: appointments
+              uri: lb://appointment-service
+              predicates:
+                - Path=/api/v1/appointments/**
+            - id: catalog-api-docs
+              uri: lb://catalog-service
+              predicates:
+                - Path=/v3/api-docs/catalog
+              filters:
+                - SetPath=/v3/api-docs
+            - id: appointment-api-docs
+              uri: lb://appointment-service
+              predicates:
+                - Path=/v3/api-docs/appointments
+              filters:
+                - SetPath=/v3/api-docs
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs/gateway
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: catalog
+        url: /v3/api-docs/catalog
+      - name: appointments
+        url: /v3/api-docs/appointments
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

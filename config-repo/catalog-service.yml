@@ -1,0 +1,39 @@
+server:
+  port: 8081
+
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://postgres:5432/catalog
+    username: ${POSTGRES_USER:dentistry}
+    password: ${POSTGRES_PASSWORD:dentistry}
+  datasource:
+    url: jdbc:postgresql://postgres:5432/catalog
+    username: ${POSTGRES_USER:dentistry}
+    password: ${POSTGRES_PASSWORD:dentistry}
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    url: jdbc:postgresql://postgres:5432/catalog
+    user: ${POSTGRES_USER:dentistry}
+    password: ${POSTGRES_PASSWORD:dentistry}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false

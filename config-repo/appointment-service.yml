@@ -1,0 +1,65 @@
+server:
+  port: 8082
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/appointments
+    username: ${POSTGRES_USER:dentistry}
+    password: ${POSTGRES_PASSWORD:dentistry}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  cloud:
+    openfeign:
+      client:
+        config:
+          catalog-service:
+            connect-timeout: 2000
+            read-timeout: 3000
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    registry-fetch-interval-seconds: 5
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 15
+
+dentistry:
+  appointment:
+    slot-minutes: ${APPOINTMENT_SLOT_MINUTES:30}
+    zone-id: ${CLINIC_ZONE_ID:Europe/Moscow}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      catalog:
+        sliding-window-type: count_based
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 2
+        ignore-exceptions:
+          - ru.itmo.dentistry.appointment.common.NotFoundException
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: false
