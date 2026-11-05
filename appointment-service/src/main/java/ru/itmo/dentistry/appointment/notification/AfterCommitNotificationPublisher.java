@@ -1,18 +1,16 @@
 package ru.itmo.dentistry.appointment.notification;
 
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Component
+@RequiredArgsConstructor
 public class AfterCommitNotificationPublisher {
 
     private final NotificationService notificationService;
-
-    public AfterCommitNotificationPublisher(NotificationService notificationService) {
-        this.notificationService = notificationService;
-    }
 
     public void created(UUID appointmentId) {
         afterCommit(() -> notificationService.appointmentCreated(appointmentId));

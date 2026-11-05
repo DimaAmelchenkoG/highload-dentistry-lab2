@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,15 +17,12 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/users/{doctorId}/availability")
 @Tag(name = "Availability", description = "Available doctor time intervals")
 public class AvailabilityController {
 
     private final AppointmentService service;
-
-    public AvailabilityController(AppointmentService service) {
-        this.service = service;
-    }
 
     @GetMapping
     @Operation(summary = "Get available slots for a doctor and date")

@@ -1,6 +1,7 @@
 package ru.itmo.dentistry.catalog.internal;
 
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,16 +11,12 @@ import ru.itmo.dentistry.catalog.procedure.ProcedureService;
 import ru.itmo.dentistry.catalog.user.UserService;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/internal")
 public class InternalCatalogController {
 
     private final UserService userService;
     private final ProcedureService procedureService;
-
-    public InternalCatalogController(UserService userService, ProcedureService procedureService) {
-        this.userService = userService;
-        this.procedureService = procedureService;
-    }
 
     @GetMapping("/users/{id}")
     Mono<CatalogUserView> user(@PathVariable UUID id) {

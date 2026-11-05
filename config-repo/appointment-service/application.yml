@@ -50,7 +50,7 @@ resilience4j:
         wait-duration-in-open-state: 10s
         permitted-number-of-calls-in-half-open-state: 2
         ignore-exceptions:
-          - ru.itmo.dentistry.appointment.common.NotFoundException
+          - feign.FeignException$NotFound
 
 management:
   endpoints:

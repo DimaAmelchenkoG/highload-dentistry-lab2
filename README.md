@@ -66,9 +66,9 @@ docker compose up --build
 
 | Файл | Кто читает |
 |---|---|
-| `config-repo/catalog-service.yml` | Каталог |
-| `config-repo/appointment-service.yml` | Записи |
-| `config-repo/gateway.yml` | Gateway |
+| `config-repo/catalog-service/application.yml` | Каталог |
+| `config-repo/appointment-service/application.yml` | Записи |
+| `config-repo/gateway/application.yml` | Gateway |
 
 Eureka и сам Config Server держат настройки у себя: иначе Config Server не смог бы подняться раньше реестра.
 
@@ -87,9 +87,9 @@ Eureka и сам Config Server держат настройки у себя: ин
 
 ## Circuit breaker
 
-Вызовы каталога обёрнуты в `@CircuitBreaker(name = "catalog")`. Если каталог отвечает ошибкой сервера или не отвечает, клиент получает **503** и текст `Catalog service is temporarily unavailable`. Ответ **404** «пользователь или процедура не найдены» в счётчик сбоев не входит.
+Вызовы каталога обёрнуты в `@CircuitBreaker(name = "catalog")`. Метод только вызывает Feign. Если каталог отвечает ошибкой сервера или не отвечает, запасной метод отдаёт клиенту **503** и текст `Catalog service is temporarily unavailable`. Ответ Feign **404** в счётчик сбоев не входит: запасной метод превращает его в обычное «не найдено».
 
-Порог задан в `config-repo/appointment-service.yml`: окно из 10 вызовов, минимум 5 вызовов, размыкание при 50% ошибок, пауза 10 секунд.
+Порог задан в `config-repo/appointment-service/application.yml`: окно из 10 вызовов, минимум 5 вызовов, размыкание при 50% ошибок, пауза 10 секунд.
 
 Проверка: поднять стек, создать пациента и врача, затем остановить каталог командой `docker compose stop catalog-service` и повторить `POST /api/v1/appointments`. Чтение уже существующей записи при этом продолжает работать.
 

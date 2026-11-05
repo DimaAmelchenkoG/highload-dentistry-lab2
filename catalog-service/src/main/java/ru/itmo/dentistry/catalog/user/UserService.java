@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +23,7 @@ import ru.itmo.dentistry.catalog.internal.CatalogUserView;
 import ru.itmo.dentistry.catalog.procedure.ProcedureRepository;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
@@ -30,25 +32,12 @@ public class UserService {
     private final TransactionalOperator transactions;
     private final Validator validator;
 
-    public UserService(
-            UserRepository userRepository,
-            ProcedureRepository procedureRepository,
-            DatabaseClient databaseClient,
-            TransactionalOperator transactions,
-            Validator validator) {
-        this.userRepository = userRepository;
-        this.procedureRepository = procedureRepository;
-        this.databaseClient = databaseClient;
-        this.transactions = transactions;
-        this.validator = validator;
-    }
-
     public Mono<UserResponse> create(UserRequest request) {
         validateDoctorFields(request);
         var email = normalizeEmail(request.email());
         var phone = request.phone().trim();
-        return userRepository.countEmailExcept(email, new UUID(0, 0))
-                .zipWith(userRepository.countPhoneExcept(phone, new UUID(0, 0)))
+        return userRepository.countByEmailIgnoreCaseAndIdNot(email, new UUID(0, 0))
+                .zipWith(userRepository.countByPhoneAndIdNot(phone, new UUID(0, 0)))
                 .flatMap(counts -> {
                     if (counts.getT1() > 0) {
                         return Mono.error(new ConflictException("Email is already in use"));
@@ -83,11 +72,11 @@ public class UserService {
     }
 
     public Mono<Page<UserResponse>> findAll(int page, int size, UserRole role) {
-        long offset = (long) page * size;
+        var pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
         Flux<UserAccount> rows = role == null
-                ? userRepository.findPage(size, offset)
-                : userRepository.findPageByRole(role.name(), size, offset);
-        Mono<Long> total = role == null ? userRepository.countUsers() : userRepository.countByRole(role.name());
+                ? userRepository.findBy(pageable)
+                : userRepository.findByRole(role.name(), pageable);
+        Mono<Long> total = role == null ? userRepository.count() : userRepository.countByRole(role.name());
         return rows.concatMap(this::toResponse)
                 .collectList()
                 .zipWith(total)
@@ -102,8 +91,8 @@ public class UserService {
         validateDoctorFields(request);
         var email = normalizeEmail(request.email());
         var phone = request.phone().trim();
-        return require(id).flatMap(user -> userRepository.countEmailExcept(email, user.getId())
-                        .zipWith(userRepository.countPhoneExcept(phone, user.getId()))
+        return require(id).flatMap(user -> userRepository.countByEmailIgnoreCaseAndIdNot(email, user.getId())
+                        .zipWith(userRepository.countByPhoneAndIdNot(phone, user.getId()))
                         .flatMap(counts -> {
                             if (counts.getT1() > 0) {
                                 return Mono.error(new ConflictException("Email is already in use"));
@@ -128,6 +117,12 @@ public class UserService {
                     return userRepository.save(user);
                 })
                 .then()
+                .as(transactions::transactional);
+    }
+
+    public Mono<Void> deletePermanently(UUID id) {
+        return require(id)
+                .flatMap(user -> userRepository.delete(user))
                 .as(transactions::transactional);
     }
 

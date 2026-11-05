@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.net.URI;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,15 +25,12 @@ import reactor.core.scheduler.Schedulers;
 
 @RestController
 @Validated
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/appointments")
 @Tag(name = "Appointments", description = "Appointment lifecycle and performed procedures")
 public class AppointmentController {
 
     private final AppointmentService service;
-
-    public AppointmentController(AppointmentService service) {
-        this.service = service;
-    }
 
     @PostMapping
     @Operation(summary = "Book an appointment")

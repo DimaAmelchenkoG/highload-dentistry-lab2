@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import ru.itmo.dentistry.appointment.common.NotFoundException;
 import ru.itmo.dentistry.appointment.notification.AfterCommitNotificationPublisher;
 
 @Service
+@RequiredArgsConstructor
 public class AppointmentService {
 
     private static final String PATIENT = "PATIENT";
@@ -30,27 +32,10 @@ public class AppointmentService {
     private final AfterCommitNotificationPublisher notifications;
     private final AppointmentCursorCodec cursorCodec;
     private final EntityManager entityManager;
+    @Value("#{T(java.time.ZoneId).of('${dentistry.appointment.zone-id}')}")
     private final ZoneId clinicZone;
+    @Value("${dentistry.appointment.slot-minutes}")
     private final int slotMinutes;
-
-    public AppointmentService(
-            AppointmentRepository appointmentRepository,
-            AppointmentProcedureRepository appointmentProcedureRepository,
-            CatalogGateway catalog,
-            AfterCommitNotificationPublisher notifications,
-            AppointmentCursorCodec cursorCodec,
-            EntityManager entityManager,
-            @Value("#{T(java.time.ZoneId).of('${dentistry.appointment.zone-id}')}") ZoneId clinicZone,
-            @Value("${dentistry.appointment.slot-minutes}") int slotMinutes) {
-        this.appointmentRepository = appointmentRepository;
-        this.appointmentProcedureRepository = appointmentProcedureRepository;
-        this.catalog = catalog;
-        this.notifications = notifications;
-        this.cursorCodec = cursorCodec;
-        this.entityManager = entityManager;
-        this.clinicZone = clinicZone;
-        this.slotMinutes = slotMinutes;
-    }
 
     @Transactional
     public AppointmentResponse create(CreateAppointmentRequest request) {
